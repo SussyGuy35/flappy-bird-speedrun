@@ -103,10 +103,11 @@ screen_height = 700
 game_speed = 60
 title = "Flappy bird"
 
+pygame.init()
 screen = pygame.display.set_mode((screen_width,screen_height))
 clock = pygame.time.Clock()
 pygame.display.set_caption(title)
-
+font = pygame.font.Font("font.ttf",25)
 # Sth
 is_started = False
 
@@ -119,7 +120,6 @@ trigger_group = pygame.sprite.Group()
 
 spw_time = 1500
 spw_timer = pygame.USEREVENT+0
-
 
 reset_time = 2000
 reset_timer = pygame.USEREVENT+1
@@ -148,6 +148,11 @@ while True:
     pipe_group.update()
     bird.update()
     trigger_group.update()
+
+    score_surf = font.render(str(bird.score),True,(255,255,255))
+    score_rect = score_surf.get_rect()
+    score_rect.center = (screen_width/2,screen_height/5)
+    screen.blit(score_surf,score_rect)
 
     pygame.display.flip()
     clock.tick(game_speed)        
