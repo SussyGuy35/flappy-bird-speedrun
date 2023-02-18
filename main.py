@@ -1,22 +1,51 @@
 import pygame, sys, random
 
+def game_reset():
+    global is_started,bird,pipe_group,trigger_group,spw_time,spw_timer,reset_time,reset_timer
+    
+    is_started = False
+
+    bird = Bird(32,32,(screen_width/4,screen_height/2),(255,255,255),0.2,5)
+
+    pipe_group = pygame.sprite.Group()
+    trigger_group = pygame.sprite.Group()
+
+    spw_time = 2500
+    spw_timer = pygame.USEREVENT+0
+    pygame.time.set_timer(spw_timer,spw_time)
+
+    reset_time = 3000
+    reset_timer = pygame.USEREVENT+1
+
 class Bird(pygame.sprite.Sprite):
+    def die(self):
+        if self.is_alive:
+            pygame.time.set_timer(reset_timer,reset_time)
+            self.is_alive = False
     def __init__(self,width,height,pos,color,grv,jump_force):
         super().__init__()
-        self.rect = pygame.rect.Rect(0,0,width,height)
+        self.width = width
+        self.height = height
+        self.rect = pygame.rect.Rect(0,0,self.width,self.height)
         self.color = color
         self.rect.center = pos
         self.vsp = 0
         self.grv = grv
         self.jump_force = jump_force
+        self.is_alive = True
         self.score = 0
     def update(self):
-        self.vsp += self.grv
+        if is_started: self.vsp += self.grv
         self.rect.y += self.vsp
+
+        if self.rect.bottom < -self.height*2: self.rect.bottom = -self.height*2
+        if self.rect.bottom > ground_y: self.die()
 
         if pygame.sprite.spritecollide(self,trigger_group,True): 
             self.score += 1
-            print(self.score)
+
+        if pygame.sprite.spritecollide(self,pipe_group,False):
+            self.die()
 
         self.draw()
     def draw(self):
@@ -31,7 +60,7 @@ class PipeUp(pygame.sprite.Sprite):
         self.rect.bottom = y_pos
         self.move_speed = move_speed
     def update(self):    
-        self.rect.x -= self.move_speed
+        if bird.is_alive: self.rect.x -= self.move_speed
 
         if self.rect.right < 0: self.kill()
 
@@ -51,7 +80,7 @@ class PipeDown(pygame.sprite.Sprite):
         pipe_group.add(PipeUp((64,64,128),screen_width+20,self.rect.y - self.gap_height,4))
         trigger_group.add(Trigger(10,self.gap_height,self.rect.x+54,self.rect.y - self.gap_height,self.move_speed ))
     def update(self):    
-        self.rect.x -= self.move_speed
+        if bird.is_alive: self.rect.x -= self.move_speed
 
         if self.rect.right < 0: self.kill()
 
@@ -65,7 +94,7 @@ class Trigger(pygame.sprite.Sprite):
         self.rect = pygame.rect.Rect(pos_x,pos_y,width,height)
         self.move_speed = move_speed
     def update(self):
-        self.rect.x -= self.move_speed    
+        if bird.is_alive: self.rect.x -= self.move_speed    
 
 
 # Config
@@ -79,14 +108,21 @@ clock = pygame.time.Clock()
 pygame.display.set_caption(title)
 
 # Sth
+is_started = False
+
+ground_y = screen_height-50
+
 bird = Bird(32,32,(screen_width/4,screen_height/2),(255,255,255),0.2,5)
 
 pipe_group = pygame.sprite.Group()
 trigger_group = pygame.sprite.Group()
 
-spw_time = 2500
+spw_time = 1500
 spw_timer = pygame.USEREVENT+0
-pygame.time.set_timer(spw_timer,spw_time)
+
+
+reset_time = 2000
+reset_timer = pygame.USEREVENT+1
 
 while True:
     for event in pygame.event.get():
@@ -94,14 +130,23 @@ while True:
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
-            bird.vsp = -bird.jump_force
+            if is_started == False: 
+                is_started = True
+                pygame.time.set_timer(spw_timer,spw_time)
+            
+            if bird.is_alive: bird.vsp = -bird.jump_force
         if event.type == spw_timer:
-            pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(100,screen_height-100),4,120))
+            pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(150,screen_height-150),4,120))
+        if event.type == reset_timer:
+            game_reset()
+            pygame.time.set_timer(reset_timer,0)
 
     screen.fill((64,128,64))
 
-    bird.update()
+    pygame.draw.rect(screen,(60,60,120),pygame.rect.Rect(0,ground_y,screen_width,screen_height-ground_y))
+
     pipe_group.update()
+    bird.update()
     trigger_group.update()
 
     pygame.display.flip()
