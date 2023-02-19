@@ -1,7 +1,7 @@
 import pygame, sys, random
 
 def game_reset():
-    global is_started,bird,pipe_group,trigger_group,spw_time,spw_timer,reset_time,reset_timer
+    global is_started,bird,pipe_group,trigger_group,spw_time,spw_timer,reset_time,reset_timer,game_speed
     
     is_started = False
 
@@ -10,12 +10,11 @@ def game_reset():
     pipe_group = pygame.sprite.Group()
     trigger_group = pygame.sprite.Group()
 
-    spw_time = 2500
-    spw_timer = pygame.USEREVENT+0
-    pygame.time.set_timer(spw_timer,spw_time)
+    spw_time = 1.5 * game_speed
+    spw_timer = spw_time
 
     reset_time = 3000
-    reset_timer = pygame.USEREVENT+1
+    reset_timer = pygame.USEREVENT+0
 
 class Bird(pygame.sprite.Sprite):
     def die(self):
@@ -118,11 +117,13 @@ bird = Bird(32,32,(screen_width/4,screen_height/2),(255,255,255),0.2,5)
 pipe_group = pygame.sprite.Group()
 trigger_group = pygame.sprite.Group()
 
-spw_time = 1500
-spw_timer = pygame.USEREVENT+0
+# spw_time = 1500
+# spw_timer = pygame.USEREVENT+0
+spw_time = 1.5 * game_speed
+spw_timer = spw_time
 
 reset_time = 2000
-reset_timer = pygame.USEREVENT+1
+reset_timer = pygame.USEREVENT+0
 
 while True:
     for event in pygame.event.get():
@@ -132,14 +133,19 @@ while True:
         if event.type == pygame.KEYDOWN:
             if is_started == False: 
                 is_started = True
-                pygame.time.set_timer(spw_timer,spw_time)
+                #pygame.time.set_timer(spw_timer,spw_time)
             
             if bird.is_alive: bird.vsp = -bird.jump_force
-        if event.type == spw_timer:
-            pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(150,screen_height-150),4,120))
+        # if event.type == spw_timer:
+        #     pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(150,screen_height-150),4,120))
         if event.type == reset_timer:
             game_reset()
             pygame.time.set_timer(reset_timer,0)
+
+    spw_timer -= 1
+    if spw_timer == 0:
+        pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(150,screen_height-150),4,120))
+        spw_timer = spw_time
 
     screen.fill((64,128,64))
 
