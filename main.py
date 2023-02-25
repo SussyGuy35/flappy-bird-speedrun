@@ -59,7 +59,7 @@ class PipeUp(pygame.sprite.Sprite):
         self.rect.bottom = y_pos
         self.move_speed = move_speed
     def update(self):    
-        if bird.is_alive: self.rect.x -= self.move_speed
+        if is_started and bird.is_alive: self.rect.x -= self.move_speed
 
         if self.rect.right < 0: self.kill()
 
@@ -79,7 +79,7 @@ class PipeDown(pygame.sprite.Sprite):
         pipe_group.add(PipeUp((64,64,128),screen_width+20,self.rect.y - self.gap_height,4))
         trigger_group.add(Trigger(10,self.gap_height,self.rect.x+54,self.rect.y - self.gap_height,self.move_speed ))
     def update(self):    
-        if bird.is_alive: self.rect.x -= self.move_speed
+        if is_started and bird.is_alive: self.rect.x -= self.move_speed
 
         if self.rect.right < 0: self.kill()
 
@@ -142,7 +142,7 @@ while True:
             game_reset()
             pygame.time.set_timer(reset_timer,0)
 
-    spw_timer -= 1
+    if is_started: spw_timer -= 1
     if spw_timer == 0:
         pipe_group.add(PipeDown((64,64,128),screen_width+20,random.randint(150,screen_height-150),4,120))
         spw_timer = spw_time
